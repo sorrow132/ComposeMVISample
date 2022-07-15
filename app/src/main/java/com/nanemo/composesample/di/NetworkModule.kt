@@ -28,7 +28,7 @@ object NetworkModule {
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient): ApiService {
         return Retrofit.Builder()
-            .baseUrl("")
+            .baseUrl("https://api.opendota.com/api/")
             .addConverterFactory(GsonConverterFactory.create())
             .client(okHttpClient)
             .build()

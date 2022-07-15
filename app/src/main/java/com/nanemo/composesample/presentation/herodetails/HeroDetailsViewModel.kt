@@ -1,7 +1,13 @@
 package com.nanemo.composesample.presentation.herodetails
 
-import com.nanemo.composesample.base.BaseViewModel
+import com.nanemo.composesample.common.BaseViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
-class HeroDetailsViewModel: BaseViewModel() {
+@HiltViewModel
+class HeroDetailsViewModel @Inject constructor(
+
+) : BaseViewModel() {
 
 }
+
