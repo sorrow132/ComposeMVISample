@@ -1,11 +1,14 @@
 package com.nanemo.composesample.presentation.heroes
 
+import androidx.compose.runtime.Stable
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import com.nanemo.composesample.common.BaseViewModel
+import com.nanemo.composesample.common.EventHandler
 import com.nanemo.composesample.di.AppDispatchers
 import com.nanemo.composesample.di.Dispatcher
 import com.nanemo.composesample.domain.HeroesRepository
+import com.nanemo.composesample.utils.MockData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.delay
@@ -16,47 +19,58 @@ import javax.inject.Inject
 class HeroesViewModel @Inject constructor(
     private val repository: HeroesRepository,
     @Dispatcher(AppDispatchers.IO) private val ioDispatcher: CoroutineDispatcher
-) : BaseViewModel() {
+) : BaseViewModel(), EventHandler<HeroesScreenEvents> {
 
-    private val mockData = listOf(
-        HeroState(1, "Spider-man", "", "", isSaved = false, isSelected = false),
-        HeroState(2, "Batman", "", "", isSaved = false, isSelected = false),
-        HeroState(3, "Superman", "", "", isSaved = false, isSelected = false),
-        HeroState(4, "Venom", "", "", isSaved = false, isSelected = false),
-        HeroState(5, "Wonder woman", "", "", isSaved = false, isSelected = false),
-        HeroState(6, "Thor", "", "", isSaved = false, isSelected = false),
-        HeroState(7, "Loki", "", "", isSaved = false, isSelected = false),
-        HeroState(8, "Iron man", "", "", isSaved = false, isSelected = false),
-        HeroState(9, "Captain America", "", "", isSaved = false, isSelected = false),
-    )
-
-    private val _uiState = MutableLiveData<ScreenHeroesState>(ScreenHeroesState.Loading)
+    private val _uiState = MutableLiveData<ScreenHeroesState>()
     val uiState: LiveData<ScreenHeroesState> = _uiState
 
     init {
         fetchHeroes()
     }
 
-    private fun fetchHeroes() {
-        uiScope.launch {
-            _uiState.value = ScreenHeroesState.Loading
-            delay(2000)
-            _uiState.value = ScreenHeroesState.Data(mockData)
+    override fun obtainEvent(event: HeroesScreenEvents) {
+        when (event) {
+            is HeroesScreenEvents.OpenHeroDetails -> heroClicked(event.hero)
+            is HeroesScreenEvents.SaveChecked -> saveClicked(event.value)
         }
+    }
+
+    private fun fetchHeroes() {
+        uiScope.launch(ioDispatcher) {
+            _uiState.postValue(ScreenHeroesState.Loading)
+            delay(2000)
+            _uiState.postValue(ScreenHeroesState.Data(MockData.heroesList))
+        }
+    }
+
+    private fun saveClicked(value: Boolean) {
+
+    }
+
+    private fun heroClicked(value: HeroState) {
+
     }
 }
 
-sealed interface ScreenHeroesState {
-    data class Data(val heroesList: List<HeroState>) : ScreenHeroesState
-    object Error : ScreenHeroesState
-    object Loading : ScreenHeroesState
+sealed class HeroesScreenEvents {
+    data class OpenHeroDetails(val hero: HeroState) : HeroesScreenEvents()
+    data class SaveChecked(val value: Boolean) : HeroesScreenEvents()
 }
 
+sealed class ScreenHeroesState {
+    data class Data(val heroesList: List<HeroState>) : ScreenHeroesState()
+    data class Error(val error: Exception) : ScreenHeroesState()
+    object Loading : ScreenHeroesState()
+}
+
+@Stable
 data class HeroState(
     val id: Int,
     val name: String,
     val icon: String,
-    val attrs: String,
+    val attr: String,
+    val description: String = "Hero description",
     val isSaved: Boolean = false,
+    val isExpanded: Boolean = false,
     val isSelected: Boolean = false
 )
