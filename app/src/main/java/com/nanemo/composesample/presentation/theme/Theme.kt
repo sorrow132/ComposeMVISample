@@ -1,4 +1,4 @@
-package com.nanemo.composesample.ui.theme
+package com.nanemo.composesample.presentation.theme
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.MaterialTheme
@@ -9,16 +9,17 @@ import androidx.compose.runtime.Composable
 private val DarkColorPalette = darkColors(
     primary = Purple200,
     primaryVariant = DarkGrey,
-    secondary = Teal200
+    secondary = Teal200,
+    onPrimary = Chartreuse
 )
 
 private val LightColorPalette = lightColors(
-    primary = Purple500,
+    primary = Indigo2,
     primaryVariant = Netspace,
     secondary = Teal200,
+    onPrimary = Navy
 
     /* Other default colors to override
-    background = Color.White,
     surface = Color.White,
     onPrimary = Color.White,
     onSecondary = Color.Black,

@@ -1,4 +1,4 @@
-package com.nanemo.composesample.ui.theme
+package com.nanemo.composesample.presentation.theme
 
 import androidx.compose.material.Typography
 import androidx.compose.ui.text.TextStyle
