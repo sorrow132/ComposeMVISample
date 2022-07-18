@@ -25,7 +25,6 @@ object RepoModule {
         return HeroesRepositoryImpl(apiService, ioDispatcher)
     }
 
-
     @Module
     @InstallIn(SingletonComponent::class)
     object DispatchersModule {

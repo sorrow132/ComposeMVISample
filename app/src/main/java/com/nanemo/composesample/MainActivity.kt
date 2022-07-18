@@ -11,7 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.nanemo.composesample.presentation.AppScreen
-import com.nanemo.composesample.ui.theme.ComposeSampleTheme
+import com.nanemo.composesample.presentation.theme.ComposeSampleTheme
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint

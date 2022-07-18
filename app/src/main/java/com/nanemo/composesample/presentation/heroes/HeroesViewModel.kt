@@ -1,14 +1,17 @@
 package com.nanemo.composesample.presentation.heroes
 
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
+import androidx.compose.runtime.Stable
 import com.nanemo.composesample.common.BaseViewModel
+import com.nanemo.composesample.common.EventHandler
 import com.nanemo.composesample.di.AppDispatchers
 import com.nanemo.composesample.di.Dispatcher
 import com.nanemo.composesample.domain.HeroesRepository
+import com.nanemo.composesample.utils.MockData
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -16,47 +19,83 @@ import javax.inject.Inject
 class HeroesViewModel @Inject constructor(
     private val repository: HeroesRepository,
     @Dispatcher(AppDispatchers.IO) private val ioDispatcher: CoroutineDispatcher
-) : BaseViewModel() {
+) : BaseViewModel(), EventHandler<HeroesScreenEvents> {
 
-    private val mockData = listOf(
-        HeroState(1, "Spider-man", "", "", isSaved = false, isSelected = false),
-        HeroState(2, "Batman", "", "", isSaved = false, isSelected = false),
-        HeroState(3, "Superman", "", "", isSaved = false, isSelected = false),
-        HeroState(4, "Venom", "", "", isSaved = false, isSelected = false),
-        HeroState(5, "Wonder woman", "", "", isSaved = false, isSelected = false),
-        HeroState(6, "Thor", "", "", isSaved = false, isSelected = false),
-        HeroState(7, "Loki", "", "", isSaved = false, isSelected = false),
-        HeroState(8, "Iron man", "", "", isSaved = false, isSelected = false),
-        HeroState(9, "Captain America", "", "", isSaved = false, isSelected = false),
-    )
-
-    private val _uiState = MutableLiveData<ScreenHeroesState>(ScreenHeroesState.Loading)
-    val uiState: LiveData<ScreenHeroesState> = _uiState
+    private val _uiState = MutableStateFlow<List<HeroState>>(emptyList())
+    val uiState: StateFlow<List<HeroState>> = _uiState
 
     init {
         fetchHeroes()
     }
 
+    override fun obtainEvent(event: HeroesScreenEvents) {
+        when (event) {
+            is HeroesScreenEvents.SaveChecked -> {}
+            is HeroesScreenEvents.ItemClick -> openHeroDetails(event.hero)
+            is HeroesScreenEvents.ItemLongClick -> updateSelectHeroState(event.value, event.hero)
+            is HeroesScreenEvents.ItemExpandClick -> updateHeroExpandState(event.value, event.hero)
+        }
+    }
+
     private fun fetchHeroes() {
-        uiScope.launch {
-            _uiState.value = ScreenHeroesState.Loading
+        uiScope.launch(ioDispatcher) {
             delay(2000)
-            _uiState.value = ScreenHeroesState.Data(mockData)
+            _uiState.value = MockData.heroesList
+        }
+    }
+
+    private fun updateHeroExpandState(value: Boolean, hero: HeroState) {
+        _uiState.value = _uiState.value.map {
+            if (it.id == hero.id) {
+                it.copy(isExpanded = value)
+            } else {
+                it
+            }
+        }
+    }
+
+    private fun updateSelectHeroState(value: Boolean, hero: HeroState) {
+        _uiState.value = _uiState.value.map {
+            if (it.id == hero.id) {
+                it.copy(isSelected = value)
+            } else {
+                it
+            }
+        }
+    }
+
+    private fun openHeroDetails(hero: HeroState) {
+        _uiState.value = _uiState.value.map {
+            if (it.id == hero.id) {
+                it.copy(heroState = ScreenState.NavigateToHeroDetails(hero))
+            } else {
+                it
+            }
         }
     }
 }
 
-sealed interface ScreenHeroesState {
-    data class Data(val heroesList: List<HeroState>) : ScreenHeroesState
-    object Error : ScreenHeroesState
-    object Loading : ScreenHeroesState
+sealed class ScreenState {
+    data class NavigateToHeroDetails(val hero: HeroState) : ScreenState()
+    object ShowData : ScreenState()
 }
 
+sealed class HeroesScreenEvents {
+    data class SaveChecked(val value: Boolean) : HeroesScreenEvents()
+    data class ItemClick(val hero: HeroState) : HeroesScreenEvents()
+    data class ItemLongClick(val value: Boolean, val hero: HeroState) : HeroesScreenEvents()
+    data class ItemExpandClick(val value: Boolean, val hero: HeroState) : HeroesScreenEvents()
+}
+
+@Stable
 data class HeroState(
     val id: Int,
     val name: String,
     val icon: String,
-    val attrs: String,
+    val attr: String,
+    val description: String = "Hero description",
     val isSaved: Boolean = false,
-    val isSelected: Boolean = false
+    val isExpanded: Boolean,
+    val isSelected: Boolean,
+    val heroState: ScreenState = ScreenState.ShowData
 )
